@@ -1,27 +1,29 @@
 import { useContext } from "react";
-import { Section } from "@/core/editor";
+import { Node, Section, Columns } from "@/core/editor";
 import { ConfigContext } from "@/core";
 import { EditorContext } from "./context";
 
 import { Box, Image } from "@chakra-ui/react";
-import { ColumnsView } from "./ColumnsView";
-import { Selectable } from "./Selectable";
 import { Selector } from "./Selector";
+import { ColumnsView } from "./ColumnsView";
 
 type Props = {
-  section: Section;
+  node: Node<Section>;
 };
 
-export function SectionView({ section }: Props) {
+export function SectionView({ node }: Props) {
   const { useCase } = useContext(ConfigContext);
-  const editorState = useContext(EditorContext);
+  const { screen, getChildren } = useContext(EditorContext);
   const config = useCase.useGetByUser("");
+
+  const section: Section = node.role;
+  const children = getChildren(node);
 
   if (config.isLoading) {
     return <p>Loading...</p>;
   }
 
-  if (config.isError || !config.data) {
+  if (config.isError || !config.data || !(section instanceof Section)) {
     return <p>An error has occured.</p>;
   }
 
@@ -32,28 +34,22 @@ export function SectionView({ section }: Props) {
       as="section"
       position="relative"
       padding={`${
-        section.padding.getValueOfScreen(editorState.screen)[0] *
-        size.basePadding
+        section.padding.getValueOfScreen(screen)[0] * size.basePadding
       }px  0 ${
-        section.padding.getValueOfScreen(editorState.screen)[1] *
-        size.basePadding
+        section.padding.getValueOfScreen(screen)[1] * size.basePadding
       }px 0`}
     >
       <Box
         position="relative"
         zIndex="4"
-        width={section.isWrapped ? editorState.screen.getWrap() : "100%"}
+        width={section.isWrapped ? screen.getWrap() : "100%"}
         margin="0 auto"
       >
-        {section.children.length > 0 &&
-          section.children.map((child, j) => (
-            <Selectable key={j.toString()} index={j}>
-              <ColumnsView columns={child} />
-            </Selectable>
-          ))}
+        {children.length > 0 &&
+          children.map((c) => <ColumnsView key={c.id} node={c} />)}
       </Box>
 
-      <Selector zIndex="3" />
+      <Selector node={node} zIndex="3" />
 
       {section.background && (
         <Box

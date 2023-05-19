@@ -1,18 +1,24 @@
 import { useContext } from "react";
-import { Box, Flex, Divider, Text, Icon } from "@chakra-ui/react";
-import { HiOutlineDocumentDuplicate } from "react-icons/hi";
-import { RxSection, RxColumns, RxComponent2 } from "react-icons/rx";
-import { Section, Columns, Component } from "@/core/editor";
+import { Page, Section, Columns, Component } from "@/core/editor";
 import { EditorContext } from "./context";
 import { Size, Color } from "@/config";
 
-import { IconButton } from "@chakra-ui/react";
+import { Box, Flex, Divider, Text, Icon, IconButton } from "@chakra-ui/react";
 import { ArrowBackIcon, ArrowForwardIcon } from "@chakra-ui/icons";
+import { HiOutlineDocumentDuplicate } from "react-icons/hi";
+import { RxSection, RxColumns, RxComponent2 } from "react-icons/rx";
+import { PageConfig } from "./PageConfig";
+import { SectionConfig } from "./SectionConfig";
+import { ColumnsConfig } from "./ColumnsConfig";
+import { ComponentConfig } from "./ComponentConfig";
 
 type Props = {};
 
 export function Toolbar({}: Props) {
-  const { selected, undo, redo } = useContext(EditorContext);
+  const { nodeMap, focusedNode, rootNode, undo, redo } =
+    useContext(EditorContext);
+
+  const focused = focusedNode?.id ? nodeMap[focusedNode.id] : null;
 
   return (
     <Box width="100%" boxShadow="0px 0px 4px rgba(0, 0, 0, .25)">
@@ -22,7 +28,9 @@ export function Toolbar({}: Props) {
         padding={`${Size.grid * 0.25}px ${Size.grid * 1}px`}
         backgroundColor={Color.white}
       >
-        <Text fontSize="sm">ページ名</Text>
+        {rootNode?.role instanceof Page && (
+          <Text fontSize="sm">{rootNode.role.name}</Text>
+        )}
 
         <Flex>
           <IconButton
@@ -44,52 +52,88 @@ export function Toolbar({}: Props) {
 
       <Divider />
 
-      <Flex
-        width="100%"
-        height={`${Size.grid * 3}px`}
-        padding={`${Size.grid * 0.5}px ${Size.grid * 1}px`}
-        backgroundColor={Color.white}
-        alignItems="center"
-        gap={`${Size.grid * 1}px`}
-      >
+      {focused && (
         <Flex
-          flexDirection="column"
-          justifyContent="center"
+          key={focused.id}
+          width="100%"
+          height={`${Size.grid * 4}px`}
+          padding={`${Size.grid * 0.5}px ${Size.grid * 1}px`}
+          backgroundColor={Color.white}
           alignItems="center"
+          gap={`${Size.grid * 1}px`}
         >
-          {!selected && (
+          {focused?.role instanceof Page && (
             <>
-              <Icon as={HiOutlineDocumentDuplicate} boxSize={5} />
-              <Text fontSize=".5rem">Page</Text>
+              <Flex
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Icon as={HiOutlineDocumentDuplicate} boxSize={5} />
+                <Text fontSize=".5rem">Page</Text>
+              </Flex>
+
+              <Divider orientation="vertical" />
+
+              <PageConfig node={focused} />
             </>
           )}
 
-          {selected instanceof Section && (
+          {focused?.role instanceof Section && (
             <>
-              <Icon as={RxSection} />
-              <Text fontSize=".5rem">Section</Text>
+              <Flex
+                key={focused.id}
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Icon as={RxSection} />
+                <Text fontSize=".5rem">Section</Text>
+              </Flex>
+
+              <Divider orientation="vertical" />
+
+              <SectionConfig node={focused} />
             </>
           )}
 
-          {selected instanceof Columns && (
+          {focused?.role instanceof Columns && (
             <>
-              <Icon as={RxColumns} />
-              <Text fontSize=".5rem">Columns</Text>
+              <Flex
+                key={focused.id}
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Icon as={RxColumns} />
+                <Text fontSize=".5rem">Columns</Text>
+              </Flex>
+
+              <Divider orientation="vertical" />
+
+              <ColumnsConfig node={focused} />
             </>
           )}
 
-          {selected instanceof Component && (
+          {focused?.role instanceof Component && (
             <>
-              <Icon as={RxComponent2} />
-              <Text fontSize=".5rem">Component</Text>
+              <Flex
+                key={focused.id}
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Icon as={RxComponent2} />
+                <Text fontSize=".5rem">Component</Text>
+              </Flex>
+
+              <Divider orientation="vertical" />
+
+              <ComponentConfig node={focused} />
             </>
           )}
         </Flex>
-
-        <Divider orientation="vertical" />
-
-        <p>設定</p>
-      </Flex>
+      )}
     </Box>
   );
 }

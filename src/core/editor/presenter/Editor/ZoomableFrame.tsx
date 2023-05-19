@@ -14,7 +14,7 @@ type ZoomableFrameProps = {
 };
 
 export const ZoomableFrame = ({ children }: ZoomableFrameProps) => {
-  const { width, setWidth, setSelectedIndex } = useContext(EditorContext);
+  const { width, setWidth, unFocus } = useContext(EditorContext);
   const ref = useRef<HTMLDivElement>(null);
   const leftResizeBarRef = useRef<HTMLDivElement>(null!);
   const rightResizeBarRef = useRef<HTMLDivElement>(null!);
@@ -66,16 +66,19 @@ export const ZoomableFrame = ({ children }: ZoomableFrameProps) => {
   };
 
   const getOnDownHandler = (direction: "left" | "right") => {
-    return () => {
+    return (e: any) => {
+      e.stopPropagation();
       setResizeDirection(direction);
     };
   };
 
-  const onUpHandler = () => {
+  const onUpHandler = (e: any) => {
+    e.stopPropagation();
     setResizeDirection(null);
   };
 
   const onResizeHandler = (event: PointerEvent) => {
+    event.stopPropagation();
     event.preventDefault();
 
     setWidth((value) => {
@@ -148,7 +151,7 @@ export const ZoomableFrame = ({ children }: ZoomableFrameProps) => {
       <Box
         position="relative"
         border={`${CANVAS_SIZE / 2}px solid transparent`}
-        onClick={() => setSelectedIndex(null)}
+        onMouseDown={() => unFocus()}
       >
         <Box
           position="absolute"
@@ -158,7 +161,7 @@ export const ZoomableFrame = ({ children }: ZoomableFrameProps) => {
           minH="900px"
           bgColor="white"
           transform={`scale(${scale})`}
-          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
         >
           <Box position="absolute" top="-4rem" left="0">
             <p>{width}px</p>

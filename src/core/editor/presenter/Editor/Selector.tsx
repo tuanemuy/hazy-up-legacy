@@ -1,39 +1,27 @@
 import { useContext } from "react";
+import { ID, Node } from "@/core/editor";
 import { EditorContext } from "./context";
-import { AddressContext } from "./Selectable";
 import { Color } from "@/config";
 
 import { Box } from "@chakra-ui/react";
 import { Actions } from "./Actions";
 
 type SelectorProps = {
+  node: Node<any>;
   zIndex: string;
 };
 
-export function Selector({ zIndex }: SelectorProps) {
-  const editorState = useContext(EditorContext);
-  const address = useContext(AddressContext);
-  const isSelected =
-    JSON.stringify(editorState.selectedIndex) === JSON.stringify(address);
-  const isChildrenSelected =
-    JSON.stringify(editorState.selectedParentIndex) === JSON.stringify(address);
+export function Selector({ node, zIndex }: SelectorProps) {
+  const { nodeMap, focusedNode, focus } = useContext(EditorContext);
+  const isFocused = focusedNode?.id === node.id;
+  const isChildrenFocused =
+    Object.values(nodeMap)
+      .filter((n: Node<any>) => n.parentId === node.id)
+      .filter((n: Node<any>) => n.id === focusedNode?.id).length > 0;
 
   const onClick: React.MouseEventHandler = (event) => {
     event.stopPropagation();
-    if (editorState.selectedIndex && editorState.selectedIndex.length > 0) {
-      for (let i = 0; i < editorState.selectedIndex.length; i++) {
-        if (editorState.selectedIndex[i] !== address[i]) {
-          editorState.setSelectedIndex(address.slice(0, i + 1));
-          return;
-        }
-      }
-
-      editorState.setSelectedIndex(
-        address.slice(0, editorState.selectedIndex.length + 1)
-      );
-    } else {
-      editorState.setSelectedIndex([address[0]]);
-    }
+    focus(node);
   };
 
   return (
@@ -56,12 +44,12 @@ export function Selector({ zIndex }: SelectorProps) {
         width="100%"
         height="100%"
         border={
-          isSelected ? `2px solid ${Color.accent}` : `3px solid transparent`
+          isFocused ? `2px solid ${Color.accent}` : `3px solid transparent`
         }
         pointerEvents="none"
       />
 
-      {isChildrenSelected && (
+      {isChildrenFocused && (
         <Box
           position="absolute"
           zIndex="997"
@@ -75,7 +63,7 @@ export function Selector({ zIndex }: SelectorProps) {
         />
       )}
 
-      {isSelected && <Actions />}
+      {isFocused && <Actions />}
     </>
   );
 }

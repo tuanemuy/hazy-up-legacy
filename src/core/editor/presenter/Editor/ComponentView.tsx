@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import {
+  Node,
   Component,
   GenerateTemplateModuleArgs,
   TemplateModule,
@@ -11,34 +12,35 @@ import { Box, Flex, Spinner } from "@chakra-ui/react";
 import { Selector } from "./Selector";
 
 type ComponentViewProps = {
-  component: Component;
+  node: Node<Component>;
 };
 
-export function ComponentView({ component }: ComponentViewProps) {
-  const editorState = useContext(EditorContext);
-  const [tm, setTm] = useState<TemplateModule | null | undefined>(undefined);
+export function ComponentView({ node }: ComponentViewProps) {
+  const { screen } = useContext(EditorContext);
+  const [tm, setTm] = useState<TemplateModule | null>(null);
+
+  const component = node.role;
 
   useEffect(() => {
     (async () => {
       try {
-        const args: GenerateTemplateModuleArgs = await import(component.path);
+        const args: GenerateTemplateModuleArgs = await import(
+          component.template.url
+        );
         setTm(TemplateModule.generate(args));
       } catch (e) {
-        console.error(e);
+        setTm(null);
       }
     })();
-  }, []);
+  }, [node.role.template]);
 
   return (
     <Box position="relative" width="100%" height="100%">
       {tm instanceof TemplateModule && (
-        <tm.Template
-          {...component.props}
-          className={tm.getStyle(editorState.screen)}
-        />
+        <tm.Template {...component.props} className={tm.getStyle(screen)} />
       )}
 
-      {tm === undefined && (
+      {tm === null && (
         <Flex
           width="100%"
           height="100%"
@@ -51,19 +53,7 @@ export function ComponentView({ component }: ComponentViewProps) {
         </Flex>
       )}
 
-      {tm === null && (
-        <Flex
-          width="100%"
-          height="100%"
-          justifyContent="center"
-          alignItems="center"
-          padding={`${Size.grid * 3}px`}
-          border={`3px dashed ${Color.theme}`}
-        >
-          <p>！</p>
-        </Flex>
-      )}
-      <Selector zIndex="2" />
+      <Selector node={node} zIndex="2" />
     </Box>
   );
 }
